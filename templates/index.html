@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SalmonScan AI — Salmon Health Inspection System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+  :root {
+    --bg-main: #0b0f17;
+    --bg-card: rgba(22, 31, 48, 0.7);
+    --bg-card-hover: rgba(30, 41, 64, 0.85);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-highlight: rgba(255, 107, 107, 0.3);
+    
+    --text-main: #f1f5f9;
+    --text-sub: #94a3b8;
+    --text-muted: #64748b;
+    
+    --accent-salmon: #ff6b6b;
+    --accent-salmon-glow: rgba(255, 107, 107, 0.25);
+    --accent-cyan: #38bdf8;
+    
+    --ok-green: #10b981;
+    --ok-glow: rgba(16, 185, 129, 0.2);
+    --bad-red: #f43f5e;
+    --bad-glow: rgba(244, 63, 94, 0.2);
+    --warning-yellow: #f59e0b;
+    
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    
+    --shadow-main: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    --glass-backdrop: blur(16px) saturate(180%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Prompt', 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Decorative Background Glows */
+  body::before, body::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    z-index: -1;
+    pointer-events: none;
+  }
+  body::before {
+    top: -100px;
+    left: -100px;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(255, 107, 107, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  }
+  body::after {
+    top: 200px;
+    right: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+  }
+
+  /* Header Navbar */
+  header {
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(11, 15, 23, 0.8);
+    backdrop-filter: var(--glass-backdrop);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    padding: 16px 0;
+  }
+
+  .nav-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .brand-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px var(--accent-salmon-glow);
+  }
+
+  .brand-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 30%, var(--accent-salmon) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .badge-beta {
+    background: rgba(255, 107, 107, 0.15);
+    color: var(--accent-salmon);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  /* Main Container */
+  main {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    flex: 1;
+  }
+
+  /* Hero Banner Section */
+  .hero {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p.sub {
+    font-size: 1.05rem;
+    color: var(--text-sub);
+    max-width: 600px;
+    margin: 0 auto;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* Control Dashboard (Dropzone + Action Bar) */
+  .dashboard-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    backdrop-filter: var(--glass-backdrop);
+    box-shadow: var(--shadow-main);
+    margin-bottom: 36px;
+  }
+
+  /* Drop Area */
+  #drop {
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-md);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(15, 23, 42, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #drop:hover, #drop.hover {
+    border-color: var(--accent-salmon);
+    background: rgba(255, 107, 107, 0.05);
+    box-shadow: 0 0 25px var(--accent-salmon-glow);
+    transform: translateY(-2px);
+  }
+
+  .drop-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--accent-salmon);
+    transition: transform 0.25s ease;
+  }
+
+  #drop:hover .drop-icon-wrapper {
+    transform: scale(1.1) rotate(-5deg);
+    background: var(--accent-salmon);
+    color: #fff;
+  }
+
+  .drop-text {
+    font-size: 1.05rem;
+    color: var(--text-main);
+    font-weight: 500;
+  }
+
+  .drop-text strong {
+    color: var(--accent-salmon);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .drop-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* Toolbar Section below Dropzone */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  #status {
+    color: var(--text-sub);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+  }
+
+  #status i {
+    color: var(--accent-cyan);
+  }
+
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 28px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--accent-salmon-glow);
+    transition: all 0.2s ease;
+    min-width: 140px;
+  }
+
+  .btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    background: linear-gradient(135deg, #ff7b7b 0%, #ff5252 100%);
+  }
+
+  .btn-submit:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: grayscale(1);
+  }
+
+  /* Grid Layout for Output Cards */
+  .results-header {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-main);
+  }
+
+  .grid {
+    display: grid;
+    gap: 20px;
+  }
+
+  /* Individual Output Item Card */
+  .item {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    backdrop-filter: var(--glass-backdrop);
+    transition: all 0.25s ease;
+    position: relative;
+  }
+
+  .item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-main);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Status Border Indicators */
+  .item.fresh {
+    border-left: 5px solid var(--ok-green);
+  }
+  .item.infected {
+    border-left: 5px solid var(--bad-red);
+  }
+
+  .img-container {
+    width: 100%;
+    height: 100%;
+    min-height: 160px;
+    max-height: 200px;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+  }
+
+  .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .item:hover img {
+    transform: scale(1.05);
+  }
+
+  .info {
+    padding: 20px 20px 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .file-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .name {
+    color: var(--text-sub);
+    font-size: 0.85rem;
+    word-break: break-all;
+    font-weight: 500;
+  }
+
+  /* Result Status Badge */
+  .badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: fit-content;
+    margin-bottom: 16px;
+  }
+
+  .fresh .badge-status {
+    background: var(--ok-glow);
+    color: var(--ok-green);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .infected .badge-status {
+    background: var(--bad-glow);
+    color: var(--bad-red);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+  }
+
+  /* Metric Progress Bars */
+  .metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .metric-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-sub);
+  }
+
+  .metric-label span.value {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .bar-bg {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.1, 0.5, 0.1, 1);
+  }
+
+  .fresh .bar-fill {
+    background: linear-gradient(90deg, #059669, var(--ok-green));
+  }
+
+  .infected .bar-fill {
+    background: linear-gradient(90deg, #e11d48, var(--bad-red));
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border-color);
+    padding: 24px 0;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    background: rgba(11, 15, 23, 0.6);
+  }
+
+  footer i {
+    color: var(--accent-salmon);
+    margin-right: 4px;
+  }
+
+  /* Loading Spinner */
+  .spinner {
+    animation: rotate 1s linear infinite;
+    width: 18px;
+    height: 18px;
+  }
+  @keyframes rotate {
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 680px) {
+    .hero h1 { font-size: 1.8rem; }
+    .hero p.sub { font-size: 0.95rem; }
+    .item { grid-template-columns: 1fr; }
+    .img-container { height: 180px; }
+    .info { padding: 0 16px 16px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .btn-submit { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <a href="#" class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-fish"></i>
+      </div>
+      <span class="brand-title">SalmonScan AI</span>
+    </a>
+    <span class="badge-beta"><i class="fa-solid fa-flask"></i> Educational v1.0</span>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>ระบบตรวจวิเคราะห์สุขภาพเนื้อปลาแซลมอน</h1>
+    <p class="sub">อัปโหลดภาพถ่ายเพื่อประเมินความสดใหม่และตรวจหาความผิดปกติหรือการติดเชื้อ ด้วยระบบปัญญาประดิษฐ์ประมวลผลการจำแนกสี</p>
+  </section>
+
+  <div class="dashboard-card">
+    <div id="drop">
+      <div class="drop-icon-wrapper">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+      </div>
+      <div class="drop-text">
+        ลากรูปภาพมาวางที่นี่ หรือ <strong>คลิกเพื่อเลือกไฟล์</strong>
+      </div>
+      <div class="drop-hint">รองรับไฟล์ประเภท PNG และ JPG (เลือกพร้อมกันได้หลายรูป)</div>
+      <input id="file" type="file" accept="image/png,image/jpeg" multiple hidden>
+    </div>
+
+    <div class="toolbar">
+      <div id="status">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>กรุณาเลือกไฟล์ภาพปลาแซลมอนเพื่อเริ่มต้นการตรวจสอบ</span>
+      </div>
+      <button id="go" class="btn-submit" disabled>
+        <i class="fa-solid fa-microscope"></i>
+        <span>เริ่มตรวจสอบ</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="results-wrapper" style="display: none;">
+    <div class="results-header">
+      <i class="fa-solid fa-chart-pie" style="color: var(--accent-salmon);"></i>
+      <span>ผลการวิเคราะห์ภาพถ่าย</span>
+    </div>
+    <div id="out" class="grid"></div>
+  </div>
+</main>
+
+<footer>
+  <p><i class="fa-solid fa-shield-halved"></i> โมเดลประมวลผลเพื่อการศึกษา (SVM + Color Histogram) · ไม่ใช่เครื่องมือวินิจฉัยทางการแพทย์หรือปศุสัตว์จริง</p>
+</footer>
+
+<script>
+const drop = document.getElementById("drop");
+const input = document.getElementById("file");
+const go = document.getElementById("go");
+const out = document.getElementById("out");
+const statusEl = document.getElementById("status");
+const resultsWrapper = document.getElementById("results-wrapper");
+let selected = [];
+
+drop.addEventListener("click", () => input.click());
+input.addEventListener("change", () => setFiles(input.files));
+
+["dragover", "dragenter"].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); 
+  drop.classList.add("hover");
+}));
+
+["dragleave", "drop"].forEach(e => drop.addEventListener(e, ev => {
+  ev.preventDefault(); 
+  drop.classList.remove("hover");
+}));
+
+drop.addEventListener("drop", ev => setFiles(ev.dataTransfer.files));
+
+function setFiles(list) {
+  selected = Array.from(list).filter(f => /^image\/(png|jpeg)$/.test(f.type));
+  go.disabled = selected.length === 0;
+  
+  if (selected.length > 0) {
+    statusEl.innerHTML = `<i class="fa-solid fa-images"></i> <span>เลือกไฟล์เรียบร้อยแล้ว <strong>${selected.length}</strong> รายการ</span>`;
+  } else {
+    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--warning-yellow)"></i> <span>ไม่พบไฟล์ PNG/JPG กรุณาเลือกไฟล์ภาพใหม่อีกครั้ง</span>`;
+  }
+  
+  out.innerHTML = "";
+  resultsWrapper.style.display = "none";
+}
+
+go.addEventListener("click", async () => {
+  go.disabled = true;
+  statusEl.innerHTML = `
+    <svg class="spinner" viewBox="0 0 50 50">
+      <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="80" stroke-dashoffset="60" style="stroke: var(--accent-salmon);"></circle>
+    </svg>
+    <span>กำลังประมวลผลและวิเคราะห์ภาพถ่าย...</span>
+  `;
+  
+  out.innerHTML = "";
+  resultsWrapper.style.display = "block";
+  
+  const fd = new FormData();
+  selected.forEach(f => fd.append("files", f));
+
+  try {
+    const res = await fetch("/predict", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+    render(data.results);
+    statusEl.innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--ok-green)"></i> <span>การวิเคราะห์เสร็จสมบูรณ์</span>`;
+  } catch (err) {
+    statusEl.innerHTML = `<i class="fa-solid fa-circle-xmark" style="color:var(--bad-red)"></i> <span>ข้อผิดพลาด: ${err.message}</span>`;
+  } finally {
+    go.disabled = false;
+  }
+});
+
+function render(results) {
+  results.forEach((r, i) => {
+    const el = document.createElement("div");
+    const file = selected.find(f => f.name === r.name) || selected[i];
+    const src = file ? URL.createObjectURL(file) : "";
+    
+    if (r.error) {
+      el.className = "item";
+      el.innerHTML = `
+        <div class="img-container">
+          <img src="${src}" alt="Salmon image">
+        </div>
+        <div class="info">
+          <div class="file-details">
+            <span class="name"></span>
+          </div>
+          <div class="badge-status" style="background: rgba(244, 63, 94, 0.15); color: var(--bad-red);">
+            <i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาด
+          </div>
+          <div style="font-size:0.9rem; color: var(--text-sub);">${r.error}</div>
+        </div>`;
+      el.querySelector(".name").textContent = r.name;
+    } else {
+      const infected = r.label === "Infected";
+      const pInfected = r.p_infected * 100;
+      const pFresh = r.p_fresh * 100;
+      const conf = infected ? pInfected : pFresh;
+      
+      el.className = "item " + (infected ? "infected" : "fresh");
+      el.innerHTML = `
+        <div class="img-container">
+          <img src="${src}" alt="Salmon image">
+        </div>
+        <div class="info">
+          <div class="file-details">
+            <span class="name"></span>
+          </div>
+          <div class="badge-status">
+            <i class="fa-solid ${infected ? 'fa-virus-slash' : 'fa-shield-heart'}"></i>
+            <span>${infected ? "Infected (พบความผิดปกติ / ติดเชื้อ)" : "Fresh (สดใหม่ / ปกติ)"}</span>
+          </div>
+          <div class="metrics">
+            <div>
+              <div class="metric-label">
+                <span>ความมั่นใจของระบบ (Confidence)</span>
+                <span class="value">${conf.toFixed(1)}%</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: ${conf.toFixed(1)}%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="metric-label">
+                <span>อัตราความเสี่ยงการติดเชื้อ (Infection Probability)</span>
+                <span class="value" style="color: ${infected ? 'var(--bad-red)' : 'var(--text-sub)'}">${pInfected.toFixed(1)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      el.querySelector(".name").textContent = r.name;
+    }
+    out.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
